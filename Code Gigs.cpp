@@ -92,113 +92,124 @@ Programming Languages Based on Use Case:
 
 
 */
-
 #include <iostream>
 #include <string>
 #include <vector>
-#include <cassert>
 using namespace std;
 
-
 class ProgrammingLanguageAccountant {
-    virtual double calculateProjectDuration(double project_budget, double rate_multiplier) = 0;
-    virtual double compensationCalculator(double hourly_rate, double project_budget) = 0;
+public:
+    virtual double compensationCalculator(double project_budget) = 0;
+    virtual ~ProgrammingLanguageAccountant() = default; // Ensure proper polymorphic deletion
 };
 
+class Developer : public ProgrammingLanguageAccountant {
+private:
+    string dev_name;
+    double hourly_rate, rate_multiplier, estimated_expenses;
+    int years_experience;
 
-class Developer: public ProgrammingLanguageAccountant {
-    private:
-        string dev_name;
-        double hourly_rate;
-        int years_experience;
+public:
+    // Constructor to initialize developer details
+    Developer(const string& name, double time_rate, double rate_multi, int experience)
+        : dev_name(name), hourly_rate(time_rate), rate_multiplier(rate_multi), years_experience(experience) {}
 
-    public:
+    // Estimate expenses based on budget and rate multiplier
+    double calculateEstimatedExpenses(double project_budget) {
+        return project_budget / (rate_multiplier + 1.5);
+    }
 
-        // Initialise class with what the gig is willing to pay the developer per hour
-        Developer(string name, double rate, int experience) : dev_name(name), hourly_rate(rate), years_experience(experience) {}
+    // Compensation calculation
+    double compensationCalculator(double project_budget) override {
+        return project_budget - estimated_expenses;
+    }
 
-        double calculateProjectDuration(double project_budget, double rate_multiplier) override {
-            return project_budget / hourly_rate;  // Time in hours
-        }
+    // Calculate estimated project duration
+    double calculateProjectDuration(double project_budget) {
+        return ((project_budget - estimated_expenses) / hourly_rate) - (years_experience * 8); 
+    }
 
-        // Compensation calculation (overrides base class method)
-            double compensationCalculator(double hourly_rate, double project_budget) override {
-                return project_budget;  // Full compensation = budget
-            }
+    // Calculate deposit (40% of total compensation)
+    double calculateDeposit(double project_budget) {
+        return (project_budget - estimated_expenses) * 0.40;
+    }
 
-            // Calculate deposit (typically 75% upfront payment)
-            double calculateDeposit(double project_budget) {
-                return project_budget * 0.25;
-            }
+    // Display project details
+    void displayProjectDetails(double project_budget, const string& project_type) {
+        estimated_expenses = calculateEstimatedExpenses(project_budget);
+        double total_compensation = compensationCalculator(project_budget);
+        double duration = calculateProjectDuration(project_budget);
+        double deposit = calculateDeposit(project_budget);
 
-
-
-        // Display gig details
-        void displayProjectDetails(double project_budget, string project_type, double rate_multiplier) {
-            double duration = calculateProjectDuration(project_budget, rate_multiplier);
-            double total_compensation = compensationCalculator(project_budget, rate_multiplier);
-            double deposit = calculateDeposit(project_budget);
-
-            cout << "\n--- Project Details for " << dev_name << " ---\n";
-            cout << "Project Type: " << project_type << "\n";
-            cout << "Hourly Rate: KES" << hourly_rate << "/hr\n";
-            cout << "Estimated Duration: " << duration << " hours\n";
-            cout << "Total Compensation: KES" << total_compensation << "\n";
-            cout << "Deposit (To Start): KES" << deposit << "\n";
-        }
-
+        cout << "\n--- Project Details for " << dev_name << " ---\n";
+        cout << "Project Type: " << project_type << "\n";
+        cout << "Years of Experience: " << years_experience << "\n";
+        cout << "Hourly Rate: KES " << hourly_rate << "/hr\n";
+        cout << "Estimated Expenses: KES " << estimated_expenses << "\n";
+        cout << "Estimated Duration: " << duration << " hours\n";
+        cout << "Total Compensation: KES " << total_compensation << "\n";
+        cout << "Deposit (To Start): KES " << deposit << "\n";
+    }
 };
-
 
 int main() {
-
     int project_type_int;
     string developer_name;
-    double hourly_rate, project_budget;
-    double rate_multiplier = 1.0;    
-    string project_type[6] = {"Operating system, Drivers, or an Embedded system", "Front-end Development", "Database management and querying", "Game Development", "Machine learning, AI, or Data analysis", "Unspecified"};
+    double hourly_rate, project_budget, rate_multiplier;
+    int years_experience;
 
-    // Loop through options and get user input on project type
-    cout << "Which type of project are you working on? Enter the number: \n";
-    for(int i = 0; i < 6; i++){
-        cout << i+1 <<" => For " << project_type[i] << "\n";
+    const vector<string> project_types = {
+        "Operating system, Drivers, or an Embedded system",
+        "Front-end Development",
+        "Database management and querying",
+        "Game Development",
+        "Machine learning, AI, or Data analysis",
+        "Unspecified"
+    };
+
+    // Display project type options
+    cout << "Which type of project are you working on? Enter the number:\n";
+    for (size_t i = 0; i < project_types.size(); i++) {
+        cout << i + 1 << " => " << project_types[i] << "\n";
     }
+
     cin >> project_type_int;
-    // when you use cin before getline(), the newline character (\n) left in the input buffer causes getline() to execute immediately without waiting for user input
-    cin.ignore();
+    cin.ignore(); // Clear newline character from input buffer
 
+    // Validate project type selection
+    if (project_type_int < 1 || project_type_int > 5) {
+        project_type_int = 6; // Default to "Unspecified"
+    }
 
-    // Get Developer name
-    // cin >> var alone Reads only one word, stopping at a space.
-    // getline(cin, var);	Reads the entire line, including spaces.
-    // ws (whitespace manipulator) removes leading whitespace, including \n ... If theres a cin before getline, it will be read as one line by getline
-    cout << "Enter the Developer's Name you want to work with: ";
-    // getline(cin >> ws, developer_name);
+    // Get developer details
+    cout << "Enter the Developer's Name: ";
     getline(cin, developer_name);
 
-    cout << "Enter Hourly Rate your willing to pay (KES/hr): ";
+    cout << "Enter Years of Experience: ";
+    cin >> years_experience;
+
+    cout << "Enter Hourly Rate (KES/hr): ";
     cin >> hourly_rate;
 
     cout << "Enter Project Budget (KES): ";
     cin >> project_budget;
 
-
+    // Assign rate multiplier based on project type
     switch (project_type_int) {
         case 1: rate_multiplier = 1.5; break; // High complexity
         case 2: rate_multiplier = 0.8; break; // Low complexity
         case 3: rate_multiplier = 1.2; break; // Medium complexity
         case 4: rate_multiplier = 1.7; break; // High complexity
         case 5: rate_multiplier = 2.0; break; // Very high complexity
-        default: rate_multiplier = 1.0; project_type_int = 6; // Unspecified
+        default: rate_multiplier = 1.0; // Unspecified
     }
 
-    // Depending on the project type selected, make calculations and display the details
-    Developer dev(developer_name, hourly_rate, 3);
-    dev.displayProjectDetails(project_budget, project_type[project_type_int - 1], rate_multiplier);
+    // Create Developer object and display project details
+    Developer dev(developer_name, hourly_rate, rate_multiplier, years_experience);
+    dev.displayProjectDetails(project_budget, project_types[project_type_int - 1]);
 
     return 0;
 }
-
 
 
 
