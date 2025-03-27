@@ -38,6 +38,7 @@ Remember, the goal of this capstone project is to showcase your understanding of
 /*
 System: Code Gigs
 Description: System where programmers can get temporary coding jobs on the side as gigs with the skills they have on different programming languages
+             Employers get in touch by sering them by name and specifying their budget and the level of dificulty of the project is calculated from the project type
 
 Programming Languages Based on Use Case:
 1) System Programming Languages. Used for operating systems, drivers, and embedded systems.
@@ -53,57 +54,23 @@ Programming Languages Based on Use Case:
         => Python, R, MATLAB, Julia
 
 
-        class ProgrammingLanguageAccountant {
-            virtual void compensation_calculation(int years_experience, int base_hourly_rate) = 0;
-        }
-
-        if(years_experience > 2){
-            // int final_hourly_rate = base_hourly_rate * (years_experience * 0.5);
-        }else{
-            final_hourly_rate = base_hourly_rate;
-        }
-
-        // auto& project_total = final_hourly_rate * int project_duration;
-        // auto& project_deposit = project_total * 0.75;
-
-        class SystemsDeveloper inherit ProgrammingLanguageAccountant {}
-
-        class BackEndDeveloper inherit ProgrammingLanguageAccountant{}
-
-        class FrontEndDeveloper inherit ProgrammingLanguageAccountant{}
-
-        class FullStackWebDeveloper inherit BackEndDeveloper, inherit FrontEndDeveloper {}
-
-        class GameDeveloper inherit ProgrammingLanguageAccountant{}
-
-        class DataScienceAIDeveloper inherit ProgrammingLanguageAccountant{}
-
-
-        // Create a list of gigs
-        // Gig should have 
-        class Gigs {};
-
-        // Create a list of developers or have the user input their skill details (years of experience dictates hourly rate range and how long the project will take)
-        // Show which projects are available to the developer in the system
-        // Let the developer choose the system they want to work on
-        // How the developer how long they have to work on the system, deposit they'll be paid, and total they'll be paid
-        class Developers {};
-
-
-
 */
 #include <iostream>
 #include <string>
 #include <vector>
+#include <limits>
+#include <cstdlib>  // For rand() and srand()
+#include <ctime>    // For time()
 using namespace std;
 
-class ProgrammingLanguageAccountant {
+class HumanResource {
 public:
     virtual double compensationCalculator(double project_budget) = 0;
-    virtual ~ProgrammingLanguageAccountant() = default; // Ensure proper polymorphic deletion
+    virtual ~HumanResource() = default; // destructor to clear memory
 };
 
-class Developer : public ProgrammingLanguageAccountant {
+
+class Developer : public HumanResource {
 private:
     string dev_name;
     double hourly_rate, rate_multiplier, estimated_expenses;
@@ -144,69 +111,117 @@ public:
         cout << "\n--- Project Details for " << dev_name << " ---\n";
         cout << "Project Type: " << project_type << "\n";
         cout << "Years of Experience: " << years_experience << "\n";
+        cout << "Estimated Project Duration: " << duration << " hours\n";
         cout << "Hourly Rate: KES " << hourly_rate << "/hr\n";
         cout << "Estimated Expenses: KES " << estimated_expenses << "\n";
-        cout << "Estimated Duration: " << duration << " hours\n";
         cout << "Total Compensation: KES " << total_compensation << "\n";
         cout << "Deposit (To Start): KES " << deposit << "\n";
     }
 };
 
+
+
+// Safely get an integer input
+int getIntegerInput(const string& prompt) {     // The function takes a prompt string and displays it using cout << prompt;
+    int value;
+    while (true) {  // Infinite loop to repeatedly ask for valid input
+        cout << prompt;
+        cin >> value;       // If the user enters a valid integer, it is stored in value
+        if (cin.fail()) {   // If cin.fail() is true, this means the input was not a valid integer.
+            cin.clear(); // Clear error state. cin.clear(); removes the fail flag so cin can be used again.
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Discard invalid input. cin.ignore(numeric_limits<streamsize>::max(), '\n'); removes any leftover invalid characters from the input buffer (e.g., if the user typed "abc123", all of it is discarded)
+            cout << "Invalid input. Please enter a valid number.\n";    // The loop restarts, asking the user for input again.
+        } else {    //If the input is valid
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Clear input buffer. The function ignores any remaining characters in the input buffer to ensure clean input.
+            return value;   // The valid integer is returned (return value;), ending the function.
+        }
+    }
+}
+
+
+
+// Safely get a double input
+double getDoubleInput(const string& prompt) {
+    double value;
+    while (true) {  // Infinite loop to repeatedly ask for valid input
+        cout << prompt;
+        cin >> value;
+        if (cin.fail()) {
+            cin.clear(); 
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input. Please enter a valid number.\n";
+        } else {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return value;
+        }
+    }
+}
+
+
+
 int main() {
-    int project_type_int;
-    string developer_name;
-    double hourly_rate, project_budget, rate_multiplier;
-    int years_experience;
 
-    const vector<string> project_types = {
-        "Operating system, Drivers, or an Embedded system",
-        "Front-end Development",
-        "Database management and querying",
-        "Game Development",
-        "Machine learning, AI, or Data analysis",
-        "Unspecified"
-    };
+    // Try catch for exception handling
+    try {
+        int project_type_int;
+        string developer_name;
+        double hourly_rate, project_budget, rate_multiplier;
+        int years_experience;
 
-    // Display project type options
-    cout << "Which type of project are you working on? Enter the number:\n";
-    for (size_t i = 0; i < project_types.size(); i++) {
-        cout << i + 1 << " => " << project_types[i] << "\n";
+        // Store all categories in array/vector
+        const vector<string> project_types = {
+            "Operating system, Drivers, or an Embedded system",
+            "Front-end Development",
+            "Database management and querying",
+            "Game Development",
+            "Machine learning, AI, or Data analysis",
+            "Unspecified"
+        };
+
+        // Loop through all options in the system/array
+        cout << "Which type of project are you working on? Enter the number:\n";
+        for (size_t i = 0; i < project_types.size(); i++) {
+            cout << i + 1 << " => " << project_types[i] << "\n";
+        }
+
+        // Make sure we don't go out of bound when an integer is entered
+        // Call on the function that checks for int inputs
+        project_type_int = getIntegerInput("Enter your choice: ");
+        if (project_type_int < 1 || project_type_int > 5) {
+            project_type_int = 6;
+        }
+
+        // Store developers name entered
+        // getline takes a while string as opposed to stopping at a space
+        // when cin is used alone it will only pick a string as far as a space and leave the rest of the string
+        cout << "Enter the Developer's Name: ";
+        getline(cin, developer_name);
+
+        srand(time(0));  // Seed the random number generator with the current time
+        // years_experience = rand();  // Generate a random integer for number of years since it's tied to the user searched
+        years_experience = (rand() % 12) + 1;  // Generates a number from 1 to 12 years of experience
+
+        hourly_rate = getDoubleInput("Enter Hourly Rate (KES/hr): ");
+        project_budget = getDoubleInput("Enter Project Budget (KES): ");
+
+        switch (project_type_int) {
+            case 1: rate_multiplier = 1.5; break;
+            case 2: rate_multiplier = 0.8; break;
+            case 3: rate_multiplier = 1.2; break;
+            case 4: rate_multiplier = 1.7; break;
+            case 5: rate_multiplier = 2.0; break;
+            default: rate_multiplier = 1.0;
+        }
+
+        Developer dev(developer_name, hourly_rate, rate_multiplier, years_experience);
+        dev.displayProjectDetails(project_budget, project_types[project_type_int - 1]);
+
+    } catch (const exception& e) {
+        cout << "An error occurred: " << e.what() << "\n";
+    } catch (...) {
+        cout << "An unknown error occurred.\n";
     }
 
-    cin >> project_type_int;
-    cin.ignore(); // Clear newline character from input buffer
-
-    // Validate project type selection
-    if (project_type_int < 1 || project_type_int > 5) {
-        project_type_int = 6; // Default to "Unspecified"
-    }
-
-    // Get developer details
-    cout << "Enter the Developer's Name: ";
-    getline(cin, developer_name);
-
-    cout << "Enter Years of Experience: ";
-    cin >> years_experience;
-
-    cout << "Enter Hourly Rate (KES/hr): ";
-    cin >> hourly_rate;
-
-    cout << "Enter Project Budget (KES): ";
-    cin >> project_budget;
-
-    // Assign rate multiplier based on project type
-    switch (project_type_int) {
-        case 1: rate_multiplier = 1.5; break; // High complexity
-        case 2: rate_multiplier = 0.8; break; // Low complexity
-        case 3: rate_multiplier = 1.2; break; // Medium complexity
-        case 4: rate_multiplier = 1.7; break; // High complexity
-        case 5: rate_multiplier = 2.0; break; // Very high complexity
-        default: rate_multiplier = 1.0; // Unspecified
-    }
-
-    // Create Developer object and display project details
-    Developer dev(developer_name, hourly_rate, rate_multiplier, years_experience);
-    dev.displayProjectDetails(project_budget, project_types[project_type_int - 1]);
 
     return 0;
 }
